@@ -1,0 +1,25 @@
+{
+  "name": "1DT004 Lab1",
+  "build": {
+    "context": ".",
+    "dockerfile": "Dockerfile"
+  },
+  "shutdownAction": "stopContainer",
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "AdaCore.ada",
+        "ms-vscode.cpptools",
+        "ms-python.python",
+        "editorConfig.editorConfig",
+        "cschlosser.doxdocgen",
+        "tintinweb.graphviz-interactive-preview"
+      ]
+    }
+  },
+  "mounts": [
+    "source=vscode-1dt004_lab1-server,target=/root/.vscode-server,type=volume"
+  ]
+}

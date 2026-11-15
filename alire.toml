@@ -7,3 +7,6 @@ maintainers = ["Ivan Shtuka <is222zf@gmail.com>", "Daniel Mohagheghifard <daniel
 licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
 website = ""
 tags = []
+
+[build-switches]
+"*".ada_version = "Ada95"

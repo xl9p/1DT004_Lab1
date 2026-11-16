@@ -9,6 +9,7 @@ procedure cyclic is
    d          : Duration := 1.0;
    Start_Time : Time := Clock;
    s          : Integer := 0;
+   f1_Next : Time := Start_Time;
 
    procedure f1 is
       Message : constant String := "f1 executing, time is now";
@@ -36,7 +37,15 @@ begin
       -- change/add your code inside this loop
       f1;
       f2;
-      f3;
-      delay d;
+
+      if s mod 2 = 0 then
+         delay until f1_Next + 0.5;
+         f3;
+      end if;
+
+      s := s + 1;
+      f1_Next := f1_Next + 1.0;
+      delay until f1_Next;
+
    end loop;
 end cyclic;

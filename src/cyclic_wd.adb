@@ -6,7 +6,8 @@ with Ada.Text_IO;
 use Ada.Calendar;
 use Ada.Text_IO;
 
--- add packages to use randam number generator
+with Ada.Numerics.Float_Random;
+use Ada.Numerics.Float_Random;
 
 procedure cyclic_wd is
    Message    : constant String := "Cyclic scheduler";
@@ -15,10 +16,9 @@ procedure cyclic_wd is
    s          : Integer := 0;
    f1_Next : Time := Start_Time;
 
+   Gen : Generator;
    f3_start : Time;
    Elapsed : Duration;
-
-   test : Time;
 
    procedure f1 is
       Message : constant String := "f1 executing, time is now";
@@ -40,7 +40,7 @@ procedure cyclic_wd is
       Put (Message);
       Put_Line (Duration'Image (Clock - Start_Time));
       
-      delay 0.6;
+      delay Duration (0.6 * Random (Gen));
    end f3;
 
    task Watchdog is
@@ -56,19 +56,21 @@ procedure cyclic_wd is
                f3_start := Clock;
             end Start;
          or
-            accept Stop do
-                  Elapsed := Clock - f3_start;
-                  if Elapsed > 0.5 then
-                     Put_Line("WArning: f3 Missed Deadline: " & Duration'Image(Elapsed));
-                  end if;
-            end Stop;
-         or
             terminate;
+         end select;
+
+         select
+            accept stop;
+         or delay until f3_start + 0.5;
+            Elapsed := Clock - f3_start;
+            Put_Line("WArning: f3 Missed Deadline: " & Duration'Image(Clock - Start_Time));
+            accept stop;
          end select;
       end loop;
    end Watchdog;
 
 begin
+   Reset(Gen);
    loop
       -- change/add your code inside this loop
       f1;
@@ -80,16 +82,14 @@ begin
          Watchdog.start;
          f3;
          Watchdog.stop;
-
-         test := Clock;
-         while test > f1_Next loop
-            f1_Next := f1_Next + 1.0;
-         end loop;
       
       end if;
 
-      s := s + 1;
-      f1_Next := f1_Next + 1.0;
+      while Clock > f1_Next loop
+         f1_Next := f1_Next + 1.0;
+         s := s + 1;
+      end loop;
+
       
       delay until f1_Next;
 

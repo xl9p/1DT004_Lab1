@@ -1,86 +1,107 @@
---Process communication: Ada lab part 3
+--  Process communication: Ada lab part 3
 
-with Ada.Calendar;
-with Ada.Text_IO;
+with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Numerics.Discrete_Random;
-use Ada.Calendar;
-use Ada.Text_IO;
+with Ada.Numerics.Float_Random;
 
 procedure comm1 is
-
-   type Int_Limit is range 0 .. 20;
-   type Size is range 1 .. 10;
-
    Message : constant String := "Process communication";
+   type Int_Limit is range 0 .. 20;
+
    task buffer is
-      entry push (X : Int_Limit);
-      entry pop (Z : out Int_Limit);
+      entry Push (X : Int_Limit);
+      entry Pop (X : out Int_Limit);
+      entry Shutdown;
    end buffer;
 
    task producer is
-      -- add your task entries for communication
+      entry Shutdown;
    end producer;
 
    task consumer is
-      -- add your task entries for communication
    end consumer;
 
    task body buffer is
-      Message : constant String := "buffer executing";
+      type Size is range 1 .. 10;
       type My_Int_Array is array (Size) of Int_Limit;
-
-      Arr   : My_Int_Array := (others => 0);
-      Count : Natural := 0;
+      Message : constant String := "Buffer executing";
+      Arr     : My_Int_Array := (others => 0);
+      Count   : Natural := 0;
+      Run     : Boolean := true;
    begin
       Put_Line (Message);
-      loop
+      while Run loop
          select
             when Count < Arr'Length =>
-               accept push (X : in Int_Limit) do
-                  Put_Line("random" & X'Image);
+               accept Push (X : in Int_Limit) do
                   Count := Count + 1;
-                  Arr (Size (Count)) := Int_Limit (X);
+                  Arr (Size (Count)) := X;
                end push;
          or
             when Count > 0 =>
-               accept pop (Z : out Int_Limit) do
-                  Z := Int_Limit (Arr (Size (Count)));
-                  Put_Line("random" & Z'Image);
+               accept Pop (X : out Int_Limit) do
+                  X := Arr (Size (Count));
                   Count := Count - 1;
                end pop;
          or
-            terminate;
+            accept Shutdown do
+               Run := false;
+            end Shutdown;
          end select;
       end loop;
+      Put_Line ("Buffer shutting down");
    end buffer;
 
    task body producer is
-      Message : constant String := "producer executing";
+      Message        : constant String := "Producer executing";
       package Random_Int is new Ada.Numerics.Discrete_Random (Int_Limit);
-
-      Gen : Random_Int.Generator;
-
-      -- change/add your local declarations here
+      IntGen         : Random_Int.Generator;
+      FloatGen       : Ada.Numerics.Float_Random.Generator;
+      GeneratedValue : Int_Limit;
+      Run            : Boolean := true;
    begin
       Put_Line (Message);
-      loop
-         buffer.push(Random_Int.Random(Gen));
-         
+      while Run loop
+         GeneratedValue := Random_Int.Random (IntGen);
+
+         if GeneratedValue > 0 then
+            buffer.push (GeneratedValue);
+            Put_Line ("Producer produced:" & Int_Limit'Image (GeneratedValue));
+         end if;
+
+         select
+            accept Shutdown do
+               Run := false;
+            end Shutdown;
+         or
+            delay Duration (Ada.Numerics.Float_Random.Random (FloatGen));
+         end select;
       end loop;
+      Put_Line ("Producer shutting down");
    end producer;
 
    task body consumer is
-      Message : constant String := "consumer executing";
-      -- change/add your local declarations here
-      Test : Int_Limit;
+      Message        : constant String := "Consumer executing";
+      FloatGen       : Ada.Numerics.Float_Random.Generator;
+      ExtractedValue : Int_Limit;
+      SumValue       : Integer := 0;
    begin
       Put_Line (Message);
-      Main_Cycle : loop
-      buffer.pop(Test);
-      Put_Line("OUTTT" & Test'Image);
-      end loop Main_Cycle;
+      loop
+         buffer.pop (ExtractedValue);
+         Put_Line ("Consumer extracted:" & Int_Limit'Image (ExtractedValue));
 
-   -- add your code to stop executions of other tasks
+         SumValue := SumValue + Integer (ExtractedValue);
+         exit when SumValue > 100;
+
+         delay Duration (Ada.Numerics.Float_Random.Random (FloatGen));
+      end loop;
+
+      --  Want to make sure producer is terminated before buffer to avoid shutting down the latter while producer is being blocked on buffer.Push, thus triggering a TASKING_ERROR exception
+      producer.Shutdown;
+      buffer.Shutdown;
+
+      Put_Line ("Consumer shutting down");
    exception
       when TASKING_ERROR =>
          Put_Line ("Buffer finished before producer");
@@ -89,4 +110,3 @@ procedure comm1 is
 begin
    Put_Line (Message);
 end comm1;
- 

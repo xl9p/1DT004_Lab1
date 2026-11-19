@@ -1,9 +1,9 @@
 --Cyclic scheduler with a watchdog:
 
-with Ada.Calendar;
+with Ada.Real_Time;
 with Ada.Text_IO;
 
-use Ada.Calendar;
+use Ada.Real_Time;
 use Ada.Text_IO;
 
 with Ada.Numerics.Float_Random;
@@ -13,8 +13,9 @@ procedure cyclic_wd is
    Message    : constant String := "Cyclic scheduler";
    d          : Duration := 1.0;
    Start_Time : Time := Clock;
-   s          : Integer := 0;
-   f1_Next : Time := Start_Time;
+   F1TimeGridIndex : Integer := 0;
+   F1NextWakeup : Time := Start_Time;
+   F1CyclePeriod : constant Time_Span := Microseconds(1E6); 
 
    Gen : Generator;
    f3_start : Time;
@@ -24,23 +25,27 @@ procedure cyclic_wd is
       Message : constant String := "f1 executing, time is now";
    begin
       Put (Message);
-      Put_Line (Duration'Image (Clock - Start_Time));
+      Put_Line (Duration'Image (To_Duration(Clock - Start_Time)));
    end f1;
 
    procedure f2 is
       Message : constant String := "f2 executing, time is now";
    begin
       Put (Message);
-      Put_Line (Duration'Image (Clock - Start_Time));
+      Put_Line (Duration'Image (To_Duration(Clock - Start_Time)));
    end f2;
 
    procedure f3 is
       Message : constant String := "f3 executing, time is now";
+      test : Duration;
    begin
       Put (Message);
-      Put_Line (Duration'Image (Clock - Start_Time));
+      Put_Line (Duration'Image (To_Duration(Clock - Start_Time)));
       
-      delay Duration (0.6 * Random (Gen));
+      test := Duration(5.1 * Random (Gen));
+      Put_Line(Duration'Image(test));
+      delay test;
+
    end f3;
 
    task Watchdog is
@@ -61,9 +66,10 @@ procedure cyclic_wd is
 
          select
             accept stop;
-         or delay until f3_start + 0.5;
-            Elapsed := Clock - f3_start;
-            Put_Line("WArning: f3 Missed Deadline: " & Duration'Image(Clock - Start_Time));
+         or delay until f3_start + Milliseconds(500);
+            Elapsed := To_Duration(Clock - f3_start);
+            Put_Line("WArning: f3 Missed Deadline: " & Duration'Image (To_Duration(Clock - Start_Time)));
+            Put_Line(Duration'Image(Elapsed));
             accept stop;
          end select;
       end loop;
@@ -71,27 +77,22 @@ procedure cyclic_wd is
 
 begin
    Reset(Gen);
+   Put_Line (Message);
    loop
-      -- change/add your code inside this loop
       f1;
       f2;
 
-      if s mod 2 = 0 then
-         delay until f1_Next + 0.5;
+      if F1TimeGridIndex mod 2 = 0 then
+         delay until F1NextWakeup + Microseconds (5E5);
 
          Watchdog.start;
          f3;
          Watchdog.stop;
-      
       end if;
 
-      while Clock > f1_Next loop
-         f1_Next := f1_Next + 1.0;
-         s := s + 1;
-      end loop;
-
-      
-      delay until f1_Next;
+      F1TimeGridIndex := ((Clock - Start_Time) / F1CyclePeriod) + 1;
+      F1NextWakeup := Start_Time + (F1TimeGridIndex * F1CyclePeriod);
+      delay until F1NextWakeup;
 
    end loop;
 end cyclic_wd;

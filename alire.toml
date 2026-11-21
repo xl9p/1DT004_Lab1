@@ -5,7 +5,7 @@ version = "0.1.0-dev"
 authors = ["Ivan Shtuka", "Daniel Mohagheghifard", "Third Member"]
 maintainers = ["Ivan Shtuka <is222zf@gmail.com>", "Daniel Mohagheghifard <danielmmfard@gmail.com>", "Third Member <example2@email.com>"]
 licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
-executables = ["lab1"]
+executables = ["cyclic", "cyclic_wd", "comm1", "comm2"]
 
 [build-switches]
 "*".ada_version = "Ada95"

@@ -1,4 +1,4 @@
---Protected types: Ada lab part 4
+--  Protected types: Ada lab part 4
 
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Numerics.Discrete_Random;

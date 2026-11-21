@@ -58,6 +58,7 @@ procedure comm2 is
          if GeneratedValue > 0 then
             buffer.push (GeneratedValue);
             Put_Line ("Producer produced:" & Int_Limit'Image (GeneratedValue));
+            GeneratedValue := 0;
          end if;
 
          select

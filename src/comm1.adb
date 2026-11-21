@@ -33,16 +33,16 @@ procedure comm1 is
       while Run loop
          select
             when Count < Arr'Length =>
-               accept Push (X : in Int_Limit) do
-                  Count := Count + 1;
-                  Arr (Size (Count)) := X;
-               end push;
+            accept Push (X : in Int_Limit) do
+               Count := Count + 1;
+               Arr (Size (Count)) := X;
+            end push;
          or
             when Count > 0 =>
-               accept Pop (X : out Int_Limit) do
-                  X := Arr (Size (Count));
-                  Count := Count - 1;
-               end pop;
+            accept Pop (X : out Int_Limit) do
+               X := Arr (Size (Count));
+               Count := Count - 1;
+            end pop;
          or
             accept Shutdown do
                Run := false;
@@ -60,6 +60,9 @@ procedure comm1 is
       GeneratedValue : Int_Limit;
       Run            : Boolean := true;
    begin
+      Random_Int.Reset (IntGen);
+      Ada.Numerics.Float_Random.Reset (FloatGen);
+
       Put_Line (Message);
       while Run loop
          GeneratedValue := Random_Int.Random (IntGen);
@@ -86,6 +89,8 @@ procedure comm1 is
       ExtractedValue : Int_Limit;
       SumValue       : Integer := 0;
    begin
+      Ada.Numerics.Float_Random.Reset (FloatGen);
+
       Put_Line (Message);
       loop
          buffer.pop (ExtractedValue);

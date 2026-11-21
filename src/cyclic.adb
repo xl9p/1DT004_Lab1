@@ -8,6 +8,7 @@ procedure cyclic is
 
    SchedulerStartTime   : constant Time := Clock;
    SchedulerCycleIndex  : Integer := 0;
+   SchedulerCyclePeriod : constant Duration := 1.0;
    SchedulerNextRelease : Time := SchedulerStartTime;
 
    procedure f1 is
@@ -43,7 +44,7 @@ begin
       end if;
 
       SchedulerCycleIndex := SchedulerCycleIndex + 1;
-      SchedulerNextRelease := SchedulerNextRelease + 1.0;
+      SchedulerNextRelease := SchedulerNextRelease + SchedulerCyclePeriod;
       delay until SchedulerNextRelease;
    end loop;
 end cyclic;

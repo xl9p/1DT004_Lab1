@@ -2,8 +2,8 @@ name = "lab1"
 description = "1DT004 Lab1."
 version = "0.1.0-dev"
 
-authors = ["Ivan Shtuka", "Daniel Mohagheghifard", "Third Member"]
-maintainers = ["Ivan Shtuka <is222zf@gmail.com>", "Daniel Mohagheghifard <danielmmfard@gmail.com>", "Third Member <example2@email.com>"]
+authors = ["Ivan Shtuka", "Daniel Mohagheghifard"]
+maintainers = ["Ivan Shtuka <is222zf@gmail.com>", "Daniel Mohagheghifard <danielmmfard@gmail.com>"]
 licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
 executables = ["cyclic", "cyclic_wd", "comm1", "comm2"]
 

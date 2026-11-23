@@ -8,15 +8,17 @@ procedure comm2 is
    Message : constant String := "Protected Object";
 
    type Int_Limit is range 0 .. 20;
-   type Size is range 1 .. 10;
+   type Size is range 0 .. 9;
    type Int_Array is array (Size) of Int_Limit;
 
    protected buffer is
       entry Push (X : Int_Limit);
       entry Pop (X : out Int_Limit);
    private
-      Arr   : Int_Array := (others => 0);
-      Count : Natural := 0;
+      Arr         : Int_Array := (others => 0);
+      PushIndex   : Natural := 0;
+      PopIndex    : Natural := 0;
+      NumElements : Natural := 0;
    end buffer;
 
    task producer is
@@ -27,16 +29,18 @@ procedure comm2 is
    end consumer;
 
    protected body buffer is
-      entry Push (X : in Int_Limit) when Count < Arr'Length is
+      entry Push (X : in Int_Limit) when NumElements < Arr'Length is
       begin
-         Count := Count + 1;
-         Arr (Size (Count)) := X;
+         Arr (Size (PushIndex)) := X;
+         PushIndex := (PushIndex + 1) mod Arr'Length;
+         NumElements := NumElements + 1;
       end Push;
 
-      entry Pop (X : out Int_Limit) when Count > 0 is
+      entry Pop (X : out Int_Limit) when NumElements > 0 is
       begin
-         X := Arr (Size (Count));
-         Count := Count - 1;
+         X := Arr (Size (PopIndex));
+         NumElements := NumElements - 1;
+         PopIndex := (PopIndex + 1) mod Arr'Length;
       end Pop;
    end buffer;
 
@@ -45,7 +49,7 @@ procedure comm2 is
       package Random_Int is new Ada.Numerics.Discrete_Random (Int_Limit);
       IntGen         : Random_Int.Generator;
       FloatGen       : Ada.Numerics.Float_Random.Generator;
-      GeneratedValue : Int_Limit;
+      GeneratedValue : Int_Limit := 0;
       Run            : Boolean := true;
    begin
       Random_Int.Reset (IntGen);
@@ -56,9 +60,8 @@ procedure comm2 is
          GeneratedValue := Random_Int.Random (IntGen);
 
          if GeneratedValue > 0 then
-            buffer.push (GeneratedValue);
+            buffer.Push (GeneratedValue);
             Put_Line ("Producer produced:" & Int_Limit'Image (GeneratedValue));
-            GeneratedValue := 0;
          end if;
 
          select
@@ -75,14 +78,14 @@ procedure comm2 is
    task body consumer is
       Message        : constant String := "Consumer executing";
       FloatGen       : Ada.Numerics.Float_Random.Generator;
-      ExtractedValue : Int_Limit;
+      ExtractedValue : Int_Limit := 0;
       SumValue       : Integer := 0;
    begin
       Ada.Numerics.Float_Random.Reset (FloatGen);
 
       Put_Line (Message);
       loop
-         buffer.pop (ExtractedValue);
+         buffer.Pop (ExtractedValue);
          Put_Line ("Consumer extracted:" & Int_Limit'Image (ExtractedValue));
 
          SumValue := SumValue + Integer (ExtractedValue);
